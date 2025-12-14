@@ -45,34 +45,64 @@ export default function AdminBlogsPage() {
   }, [session])
 
   const fetchBlogs = () => {
-    // Sample data - replace with API call
-    const sampleBlogs: Blog[] = [
-      {
-        id: '1',
-        title: 'Getting Started with Data Structures',
-        excerpt: 'Learn the fundamentals...',
-        content: 'Full content...',
-        category: 'Tutorial',
-        isPublished: true,
-        createdAt: new Date().toISOString()
+    // Load blogs from localStorage (since there's no backend API yet)
+    try {
+      const savedBlogs = localStorage.getItem('neuralearn_blogs')
+      if (savedBlogs) {
+        setBlogs(JSON.parse(savedBlogs))
+      } else {
+        // Initialize with sample blog
+        const sampleBlogs: Blog[] = [
+          {
+            id: '1',
+            title: 'Getting Started with Data Structures',
+            excerpt: 'Learn the fundamentals of data structures and their importance in computer science.',
+            content: 'Data structures are fundamental concepts in computer science that allow us to organize and store data efficiently. In this tutorial, we will explore the most common data structures including arrays, linked lists, stacks, queues, trees, and graphs. Understanding these concepts is crucial for writing efficient algorithms and solving complex programming problems.',
+            category: 'Tutorial',
+            isPublished: true,
+            createdAt: new Date().toISOString()
+          }
+        ]
+        setBlogs(sampleBlogs)
+        localStorage.setItem('neuralearn_blogs', JSON.stringify(sampleBlogs))
       }
-    ]
-    setBlogs(sampleBlogs)
+    } catch (error) {
+      console.error('Error loading blogs:', error)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!blogForm.title || !blogForm.content) {
-      alert('Please fill in all required fields')
+      alert('Please fill in title and content')
       return
     }
 
     setCreating(true)
 
     try {
-      // TODO: API call to create blog
+      // Create new blog
+      const newBlog: Blog = {
+        id: Date.now().toString(),
+        title: blogForm.title,
+        excerpt: blogForm.excerpt || blogForm.content.substring(0, 150) + '...',
+        content: blogForm.content,
+        category: blogForm.category,
+        isPublished: blogForm.isPublished,
+        createdAt: new Date().toISOString()
+      }
+
+      // Add to blogs array
+      const updatedBlogs = [newBlog, ...blogs]
+      setBlogs(updatedBlogs)
+
+      // Save to localStorage
+      localStorage.setItem('neuralearn_blogs', JSON.stringify(updatedBlogs))
+
       alert('Blog created successfully!')
+      
+      // Reset form
       setBlogForm({
         title: '',
         excerpt: '',
@@ -80,8 +110,8 @@ export default function AdminBlogsPage() {
         category: 'Tutorial',
         isPublished: true
       })
+      
       setActiveView('list')
-      fetchBlogs()
     } catch (error) {
       console.error('Error creating blog:', error)
       alert('Failed to create blog')
@@ -93,9 +123,15 @@ export default function AdminBlogsPage() {
   const handleDelete = (blogId: string) => {
     if (!confirm('Are you sure you want to delete this blog?')) return
     
-    // TODO: API call to delete
-    alert('Blog deleted!')
-    fetchBlogs()
+    try {
+      const updatedBlogs = blogs.filter(blog => blog.id !== blogId)
+      setBlogs(updatedBlogs)
+      localStorage.setItem('neuralearn_blogs', JSON.stringify(updatedBlogs))
+      alert('Blog deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting blog:', error)
+      alert('Failed to delete blog')
+    }
   }
 
   if (status === 'loading') {
@@ -117,6 +153,14 @@ export default function AdminBlogsPage() {
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Blog Management</h1>
           <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-1">Create and manage blog posts</p>
+        </div>
+
+        {/* Note about storage */}
+        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-blue-800">
+            <strong>Note:</strong> Blogs are currently stored in browser localStorage. 
+            They will appear on the blog page instantly after creation.
+          </p>
         </div>
 
         {/* View Toggle */}
@@ -181,6 +225,12 @@ export default function AdminBlogsPage() {
                       </div>
                       <div className="flex sm:flex-col gap-2">
                         <button
+                          onClick={() => router.push(`/blog/${blog.id}`)}
+                          className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition"
+                        >
+                          View
+                        </button>
+                        <button
                           onClick={() => handleDelete(blog.id)}
                           className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50 transition"
                         >
@@ -222,7 +272,7 @@ export default function AdminBlogsPage() {
                     onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
                     className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={2}
-                    placeholder="Brief summary..."
+                    placeholder="Brief summary (optional - will auto-generate from content if empty)"
                   />
                 </div>
 

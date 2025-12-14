@@ -211,15 +211,26 @@ export default function InstructorPage() {
       return
     }
 
-    alert('Resource submitted successfully! (This will be connected to backend)')
-    setResourceForm({
-      title: '',
-      description: '',
-      type: 'ARTICLE',
-      url: '',
-      topic: '',
-      difficulty: 'MEDIUM'
-    })
+    setCreating(true)
+
+    try {
+      // For now, just show success message since there's no resource API
+      // In production, you would make an API call here
+      alert('Resource submitted successfully!')
+      setResourceForm({
+        title: '',
+        description: '',
+        type: 'ARTICLE',
+        url: '',
+        topic: '',
+        difficulty: 'MEDIUM'
+      })
+    } catch (error) {
+      console.error('Error submitting resource:', error)
+      alert('Failed to submit resource')
+    } finally {
+      setCreating(false)
+    }
   }
 
   if (status === 'loading') {

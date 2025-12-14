@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  password      String
+  role          Role           @default(STUDENT)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  quizzes       Quiz[]         @relation("InstructorQuizzes")
+  quizAttempts  QuizAttempt[]
+  
+  @@map("users")
+}
+
+model Quiz {
+  id            String         @id @default(cuid())
+  title         String
+  description   String?
+  topic         String
+  difficulty    String         @default("MEDIUM")
+  duration      Int            @default(30)
+  instructorId  String
+  isPublished   Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  instructor    User           @relation("InstructorQuizzes", fields: [instructorId], references: [id], onDelete: Cascade)
+  questions     Question[]
+  attempts      QuizAttempt[]
+  
+  @@map("quizzes")
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  quizId        String
+  question      String
+  options       String[]
+  correctAnswer Int
+  explanation   String?
+  topic         String
+  difficulty    String         @default("MEDIUM")
+  createdAt     DateTime       @default(now())
+  
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  
+  @@map("questions")
+}
+
+model QuizAttempt {
+  id            String         @id @default(cuid())
+  quizId        String
+  userId        String
+  answers       Json
+  score         Float
+  totalQuestions Int
+  correctAnswers Int
+  weakAreas     String[]
+  completedAt   DateTime       @default(now())
+  timeSpent     Int
+  
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("quiz_attempts")
+}
+
+model KnowledgeBase {
+  id            String         @id @default(cuid())
+  topic         String
+  subtopic      String
+  content       String
+  difficulty    String         @default("MEDIUM")
+  resources     String[]
+  tags          String[]
+  embedding     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([topic])
+  @@index([subtopic])
+  @@map("knowledge_base")
+}

@@ -11,7 +11,6 @@ interface Blog {
   content: string
   excerpt: string
   category: string
-  isPublished?: boolean
   createdAt: string
 }
 
@@ -40,51 +39,18 @@ export default function BlogPage() {
     filterBlogs()
   }, [blogs, selectedCategory, searchQuery])
 
-  const fetchBlogs = () => {
+  const fetchBlogs = async () => {
+    setLoading(true)
     try {
-      // Load blogs from localStorage
-      const savedBlogs = localStorage.getItem('neuralearn_blogs')
-      if (savedBlogs) {
-        const parsedBlogs = JSON.parse(savedBlogs)
-        // Only show published blogs
-        const publishedBlogs = parsedBlogs.filter((blog: Blog) => blog.isPublished !== false)
-        setBlogs(publishedBlogs)
+      const response = await fetch('/api/blog')
+      if (response.ok) {
+        const data = await response.json()
+        setBlogs(data)
       } else {
-        // Initialize with sample blog if none exist
-        const sampleBlogs: Blog[] = [
-          {
-            id: '1',
-            title: 'Getting Started with Data Structures',
-            excerpt: 'Learn the fundamentals of data structures and why they are important in computer science.',
-            content: 'Data structures are fundamental concepts in computer science that allow us to organize and store data efficiently. In this tutorial, we will explore the most common data structures including arrays, linked lists, stacks, queues, trees, and graphs.',
-            category: 'Tutorial',
-            isPublished: true,
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            title: 'Top 10 Algorithm Patterns for Coding Interviews',
-            excerpt: 'Master these algorithm patterns to ace your coding interviews.',
-            content: 'Coding interviews often test your ability to recognize and apply common algorithm patterns. In this article, we cover the top 10 patterns including two pointers, sliding window, dynamic programming, and more.',
-            category: 'Career',
-            isPublished: true,
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '3',
-            title: 'Understanding Time Complexity',
-            excerpt: 'A comprehensive guide to Big O notation and time complexity analysis.',
-            content: 'Time complexity is a crucial concept in computer science that helps us analyze the efficiency of algorithms. In this guide, we will explore Big O notation and learn how to analyze the time complexity of different algorithms.',
-            category: 'Tutorial',
-            isPublished: true,
-            createdAt: new Date().toISOString()
-          }
-        ]
-        setBlogs(sampleBlogs)
-        localStorage.setItem('neuralearn_blogs', JSON.stringify(sampleBlogs))
+        console.error('Failed to fetch blogs')
       }
     } catch (error) {
-      console.error('Error loading blogs:', error)
+      console.error('Error fetching blogs:', error)
     } finally {
       setLoading(false)
     }

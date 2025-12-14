@@ -11,7 +11,6 @@ interface Blog {
   content: string
   excerpt: string
   category: string
-  isPublished?: boolean
   createdAt: string
 }
 
@@ -31,24 +30,23 @@ export default function BlogDetailPage() {
   }, [status, router])
 
   useEffect(() => {
-    if (blogId) {
+    if (blogId && session) {
       fetchBlog()
     }
-  }, [blogId])
+  }, [blogId, session])
 
-  const fetchBlog = () => {
+  const fetchBlog = async () => {
+    setLoading(true)
     try {
-      // Load blogs from localStorage
-      const savedBlogs = localStorage.getItem('neuralearn_blogs')
-      if (savedBlogs) {
-        const parsedBlogs: Blog[] = JSON.parse(savedBlogs)
-        const foundBlog = parsedBlogs.find(b => b.id === blogId && b.isPublished !== false)
-        if (foundBlog) {
-          setBlog(foundBlog)
-        }
+      const response = await fetch(`/api/blog?id=${blogId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setBlog(data)
+      } else {
+        console.error('Blog not found')
       }
     } catch (error) {
-      console.error('Error loading blog:', error)
+      console.error('Error fetching blog:', error)
     } finally {
       setLoading(false)
     }

@@ -98,3 +98,32 @@ model KnowledgeBase {
   @@index([subtopic])
   @@map("knowledge_base")
 }
+
+model Subject {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  description   String?
+  icon          String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  topics        Topic[]
+  
+  @@map("subjects")
+}
+
+model Topic {
+  id            String         @id @default(cuid())
+  subjectId     String
+  name          String
+  description   String?
+  difficulty    String         @default("MEDIUM")
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  subject       Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  @@map("topics")
+}

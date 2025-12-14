@@ -271,6 +271,153 @@ async function main() {
   }
   console.log(`✓ Created ${knowledgeEntries.length} knowledge base entries`)
 
+  // Create subjects and topics
+  console.log('Creating subjects and topics...')
+
+  const dataStructuresSubject = await prisma.subject.create({
+    data: {
+      name: 'Data Structures',
+      description: 'Learn fundamental data structures for efficient algorithm implementation',
+      icon: '🗂️',
+      isActive: true,
+      topics: {
+        create: [
+          {
+            name: 'Arrays',
+            description: 'Sequential data storage with constant-time access',
+            difficulty: 'EASY',
+            isActive: true
+          },
+          {
+            name: 'Linked Lists',
+            description: 'Dynamic data structure with nodes and pointers',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Stack',
+            description: 'LIFO data structure for sequential processing',
+            difficulty: 'EASY',
+            isActive: true
+          },
+          {
+            name: 'Queue',
+            description: 'FIFO data structure for ordered processing',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Trees',
+            description: 'Hierarchical data structure with parent-child relationships',
+            difficulty: 'HARD',
+            isActive: true
+          },
+          {
+            name: 'Graphs',
+            description: 'Network structure with nodes and edges',
+            difficulty: 'HARD',
+            isActive: true
+          },
+          {
+            name: 'Hash Tables',
+            description: 'Key-value storage with fast lookup',
+            difficulty: 'MEDIUM',
+            isActive: true
+          }
+        ]
+      }
+    }
+  })
+  console.log('✓ Subject created:', dataStructuresSubject.name)
+
+  const algorithmsSubject = await prisma.subject.create({
+    data: {
+      name: 'Algorithms',
+      description: 'Master algorithm design and analysis techniques',
+      icon: '⚙️',
+      isActive: true,
+      topics: {
+        create: [
+          {
+            name: 'Searching',
+            description: 'Techniques to find elements in data structures',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Sorting',
+            description: 'Algorithms to arrange data in order',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Recursion',
+            description: 'Self-referential problem-solving technique',
+            difficulty: 'HARD',
+            isActive: true
+          },
+          {
+            name: 'Dynamic Programming',
+            description: 'Optimization technique using memoization',
+            difficulty: 'HARD',
+            isActive: true
+          },
+          {
+            name: 'Greedy Algorithms',
+            description: 'Local optimization for global solutions',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Complexity Analysis',
+            description: 'Understanding time and space complexity',
+            difficulty: 'MEDIUM',
+            isActive: true
+          }
+        ]
+      }
+    }
+  })
+  console.log('✓ Subject created:', algorithmsSubject.name)
+
+  const programmingSubject = await prisma.subject.create({
+    data: {
+      name: 'Programming',
+      description: 'Core programming concepts and paradigms',
+      icon: '💻',
+      isActive: true,
+      topics: {
+        create: [
+          {
+            name: 'Object-Oriented Programming',
+            description: 'OOP principles and design patterns',
+            difficulty: 'MEDIUM',
+            isActive: true
+          },
+          {
+            name: 'Functional Programming',
+            description: 'Functional paradigm and pure functions',
+            difficulty: 'HARD',
+            isActive: true
+          },
+          {
+            name: 'Data Types',
+            description: 'Primitive and complex data types',
+            difficulty: 'EASY',
+            isActive: true
+          },
+          {
+            name: 'Control Flow',
+            description: 'Conditionals, loops, and branching',
+            difficulty: 'EASY',
+            isActive: true
+          }
+        ]
+      }
+    }
+  })
+  console.log('✓ Subject created:', programmingSubject.name)
+
   console.log('✅ Database seeded successfully!')
   console.log('\n📋 Demo Accounts:')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

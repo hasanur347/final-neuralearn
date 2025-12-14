@@ -2,23 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
 
-const createQuizSchema = z.object({
-  title: z.string().min(3),
-  description: z.string().optional(),
-  topic: z.string().min(2),
-  difficulty: z.string().default('MEDIUM'),
-  duration: z.number().default(30),
-  questions: z.array(z.object({
-    question: z.string(),
-    options: z.array(z.string()).min(2),
-    correctAnswer: z.number(),
-    explanation: z.string().optional(),
-    topic: z.string(),
-    difficulty: z.string().default('MEDIUM')
-  }))
-})
+// Validation helper functions
+function validateQuizData(data: any) {
+  if (!data.title || data.title.length < 3) {
+    throw new Error('Title must be at least 3 characters')
+  }
+  if (!data.topic || data.topic.length < 2) {
+    throw new Error('Topic must be at least 2 characters')
+  }
+  if (!Array.isArray(data.questions) || data.questions.length === 0) {
+    throw new Error('Quiz must have at least one question')
+  }
+  
+  // Validate each question
+  data.questions.forEach((q: any, index: number) => {
+    if (!q.question || q.question.length < 3) {
+      throw new Error(`Question ${index + 1}: Question text is required`)
+    }
+    if (!Array.isArray(q.options) || q.options.length < 2) {
+      throw new Error(`Question ${index + 1}: Must have at least 2 options`)
+    }
+    if (typeof q.correctAnswer !== 'number' || q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
+      throw new Error(`Question ${index + 1}: Invalid correct answer index`)
+    }
+    if (!q.topic) {
+      throw new Error(`Question ${index + 1}: Topic is required`)
+    }
+  })
+}
 
 // GET all quizzes or single quiz
 export async function GET(request: NextRequest) {
@@ -101,19 +113,35 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = createQuizSchema.parse(body)
+    
+    // Validate data
+    try {
+      validateQuizData(body)
+    } catch (validationError: any) {
+      return NextResponse.json(
+        { error: 'Invalid input data', details: validationError.message },
+        { status: 400 }
+      )
+    }
 
     // Create quiz with questions
     const quiz = await prisma.quiz.create({
       data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        topic: validatedData.topic,
-        difficulty: validatedData.difficulty,
-        duration: validatedData.duration,
+        title: body.title,
+        description: body.description || null,
+        topic: body.topic,
+        difficulty: body.difficulty || 'MEDIUM',
+        duration: body.duration || 30,
         instructorId: session.user.id,
         questions: {
-          create: validatedData.questions
+          create: body.questions.map((q: any) => ({
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation || null,
+            topic: q.topic,
+            difficulty: q.difficulty || 'MEDIUM'
+          }))
         }
       },
       include: {
@@ -125,17 +153,10 @@ export async function POST(request: NextRequest) {
       { message: 'Quiz created successfully', quiz },
       { status: 201 }
     )
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
-        { status: 400 }
-      )
-    }
-
+  } catch (error: any) {
     console.error('Error creating quiz:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     )
   }
